@@ -5,10 +5,10 @@ from project.server import Server
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
-    "--tcpport", dest="tcp_port", help="Listening tcp port", default="8000"
+    "--tcpport", dest="tcp_port", help="Listening tcp port", default="8001"
 )
 parser.add_argument(
-    "--udpport", dest="udp_port", help="Listening udp port", default="8000"
+    "--udpport", dest="udp_port", help="Listening udp port", default="8002"
 )
 
 args = parser.parse_args()

@@ -75,6 +75,7 @@ class UdpServer(Thread):
         while self.is_listening:
             try:
                 data_bytes, addr = self.sock.recvfrom(1024)
+                print('udp: ', data_bytes)
             except socket.timeout:
                 continue
             except OSError:

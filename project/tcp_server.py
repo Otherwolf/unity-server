@@ -52,7 +52,7 @@ class TcpServer(Thread):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind(("", self.tcp_port))
         self.sock.setblocking(False)
-        self.sock.settimeout(2)
+        self.sock.settimeout(5)
         self.sock.listen(5)
         self._connections.append(self.sock)
 
@@ -76,6 +76,7 @@ class TcpServer(Thread):
         """
         while self.is_listening:
             ready_to_read, w, e = select(self._connections, [], [])
+
             for sock in ready_to_read:
                 if sock is self.sock:
                     self._accept_connection(sock)
@@ -94,12 +95,15 @@ class TcpServer(Thread):
             try:
                 data_bytes = client_socket.recv(1024)
             except BlockingIOError:
-                break
+                return
             if not data_bytes:
+                return
+            if data_bytes == b'close':
                 break
             try:
                 decoded_data = data_bytes.decode('utf-8')
                 data = json.loads(decoded_data)
+                print(data)
 
                 action = data.get('action')
                 # handle data  here
@@ -115,5 +119,6 @@ class TcpServer(Thread):
             finally:
                 pass
         print('close client socket')
+
         self._connections.remove(client_socket)
         client_socket.close()

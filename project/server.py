@@ -107,7 +107,8 @@ class Server:
         for registered_client in self.clients.values():
             ip, udp_addr = registered_client.udp_addr
             if str(udp_addr) == str(payload):
-                registered_client._socket = client_socket
+                if client_socket:
+                    registered_client._socket = client_socket
                 self.send_to_client_tcp("REGISTER-SUCCESS", registered_client, {"identifier": registered_client.identifier})
                 # broadcast
                 message = {
