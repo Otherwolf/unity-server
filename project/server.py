@@ -94,7 +94,7 @@ class Server:
             self._actions[action] = Event()
         self._actions[action].append(func)
 
-    def _handle_init_client(self, *args, **kwargs):
+    def _broadcast_init_client(self):
         # broadcast
         message = {
             "client-list": list(self.clients.keys())
@@ -109,25 +109,25 @@ class Server:
         :param payload:
         :return: Client
         """
-        payload = kwargs.get('payload')
         client_socket = kwargs.get('client_socket')
+        real_ip, udp_port = kwargs.get('payload').split(':')
 
         for registered_client in self.clients.values():
             ip, udp_addr = registered_client.udp_addr
-            if str(udp_addr) == str(payload):
+            if str(udp_addr) == str(udp_port):
                 if client_socket:
                     registered_client._socket = client_socket
                 self.send_to_client_tcp("REGISTER-SUCCESS", registered_client, {"identifier": registered_client.identifier})
+                self._broadcast_init_client()
                 return
-        client = Client(client_socket.getpeername(), int(payload), client_socket)
+        client = Client((real_ip, client_socket.getpeername()[1]), int(udp_port), client_socket)
 
         self.clients[client.identifier] = client
         self.send_to_client_tcp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
+        self._broadcast_init_client()
 
     def _init_events(self):
         # Событие на регистрацию udp клиента
         self.on('REGISTER', self._handle_register)
-        # Инициализация клиента
-        self.on('INIT_CLIENT', self._handle_init_client)
         # Событие на перемещение игрока
         self.on('POSITION', events.handle_position)
