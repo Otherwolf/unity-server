@@ -94,6 +94,14 @@ class Server:
             self._actions[action] = Event()
         self._actions[action].append(func)
 
+    def _handle_init_client(self, *args, **kwargs):
+        # broadcast
+        message = {
+            "client-list": list(self.clients.keys())
+        }
+        self.set_udp_message('CLIENTS-LIST', message)
+        self.send_to_all_udp()
+
     def _handle_register(self, *args, **kwargs) -> None:
         """
         Запоминаем клиента
@@ -110,26 +118,16 @@ class Server:
                 if client_socket:
                     registered_client._socket = client_socket
                 self.send_to_client_tcp("REGISTER-SUCCESS", registered_client, {"identifier": registered_client.identifier})
-                # broadcast
-                message = {
-                    "client-list": list(self.clients.keys())
-                }
-                self.set_udp_message('CLIENTS-LIST', message)
-                self.send_to_all_udp()
                 return
         client = Client(client_socket.getpeername(), int(payload), client_socket)
 
         self.clients[client.identifier] = client
         self.send_to_client_tcp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
-        # broadcast
-        message = {
-            "client-list": list(self.clients.keys())
-        }
-        self.set_udp_message('CLIENTS-LIST', message)
-        self.send_to_all_udp()
 
     def _init_events(self):
         # Событие на регистрацию udp клиента
         self.on('REGISTER', self._handle_register)
+        # Инициализация клиента
+        self.on('INIT_CLIENT', self._handle_init_client)
         # Событие на перемещение игрока
         self.on('POSITION', events.handle_position)
