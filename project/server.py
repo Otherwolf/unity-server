@@ -94,7 +94,7 @@ class Server:
             self._actions[action] = Event()
         self._actions[action].append(func)
 
-    def _broadcast_init_client(self):
+    def _handle_init_client(self, *args, **kwargs):
         # broadcast
         message = {
             "client-list": list(self.clients.keys())
@@ -118,16 +118,16 @@ class Server:
                 if client_socket:
                     registered_client._socket = client_socket
                 self.send_to_client_tcp("REGISTER-SUCCESS", registered_client, {"identifier": registered_client.identifier})
-                self._broadcast_init_client()
                 return
         client = Client((real_ip, client_socket.getpeername()[1]), int(udp_port), client_socket)
 
         self.clients[client.identifier] = client
         self.send_to_client_tcp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
-        self._broadcast_init_client()
 
     def _init_events(self):
         # Событие на регистрацию udp клиента
         self.on('REGISTER', self._handle_register)
         # Событие на перемещение игрока
         self.on('POSITION', events.handle_position)
+        # Принимаем udp запрос для иницииализации доступа к бродкасту
+        self.on('INIT_CLIENT', self._handle_init_client)
