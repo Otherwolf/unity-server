@@ -50,7 +50,7 @@ class TcpServer(Thread):
         :return:
         """
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind(("127.0.0.1", self.tcp_port))
+        self.sock.bind(("", self.tcp_port))
         self.sock.setblocking(False)
         self.sock.settimeout(2)
         self.sock.listen(5)

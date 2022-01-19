@@ -62,7 +62,7 @@ class UdpServer(Thread):
         :return:
         """
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind(("127.0.0.1", self.udp_port))
+        self.sock.bind(("", self.udp_port))
         self.sock.setblocking(False)
         self.sock.settimeout(5)
 
@@ -77,6 +77,8 @@ class UdpServer(Thread):
                 data_bytes, addr = self.sock.recvfrom(1024)
             except socket.timeout:
                 continue
+            except OSError:
+                break
             if not data_bytes:
                 continue
             try:
