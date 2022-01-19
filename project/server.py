@@ -53,6 +53,8 @@ class Server:
                 print("Shutting down server...")
                 udp_server.is_listening = False
                 tcp_server.is_listening = False
+                udp_server.stop()
+                tcp_server.stop()
                 is_running = False
 
         udp_server.join()
