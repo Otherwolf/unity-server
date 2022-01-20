@@ -23,13 +23,11 @@ class Client:
 
     def init_udp(self, udp_addr: Tuple[str, int], udp_socket: socket):
         self._udp_socket = udp_socket
-        self.identifier = str(uuid.uuid4())
         self.udp_addr = udp_addr
         return self
 
     def init_tcp(self, tcp_addr: Tuple[str, int], tcp_socket: socket):
         self._socket = tcp_socket
-        self.identifier = str(uuid.uuid4())
         self.addr = tcp_addr
         return self
 
