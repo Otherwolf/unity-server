@@ -94,7 +94,7 @@ class Server:
             self._actions[action] = Event()
         self._actions[action].append(func)
 
-    def _handle_init_client(self, *args, **kwargs):
+    def _broadcast_init_client(self, *args, **kwargs):
         # broadcast
         message = {
             "client-list": list(self.clients.keys())
@@ -102,31 +102,41 @@ class Server:
         self.set_udp_message('CLIENTS-LIST', message)
         self.send_to_all_udp()
 
-    def _handle_register(self, payload, client_socket, **kwargs) -> None:
+    def _handle_register_tcp(self, identifier, client_socket, **kwargs) -> None:
         """
         Запоминаем клиента
         :param addr:
         :param payload:
         :return: Client
         """
+        client = self.get_client_by_identifier(identifier)
+        if client:
+            client._socket = client_socket
+            client.addr = client_socket.getpeername()
+            client._socket = client_socket
+            self.send_to_client_tcp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
+            self._broadcast_init_client()
 
-        for registered_client in self.clients.values():
-            ip, udp_addr = registered_client.udp_addr
-            if str(udp_addr) == str(payload):
-                if client_socket:
-                    registered_client._socket = client_socket
-                self.send_to_client_tcp("REGISTER-SUCCESS", registered_client, {"identifier": registered_client.identifier})
-                self._handle_init_client()
-                return
-        client = Client(client_socket.getpeername(), int(payload), client_socket)
+    def _handle_register_udp(self, *args, addr, **kwargs):
+        client = self.get_client_by_upd_address(addr)
+        if not client:
+            client = Client(addr)
+        self.send_to_client_udp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
 
-        self.clients[client.identifier] = client
-        self.send_to_client_tcp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
-        self._handle_init_client()
+
+    def get_client_by_upd_address(self, addr: tuple[str, int]) -> Client:
+        for client in self.clients:
+            if client.udp_addr == addr:
+                return client
+
+    def get_client_by_identifier(self, identifier: str) -> Client:
+        for client in self.clients:
+            if client.identifier == identifier:
+                return client
 
     def _init_events(self):
         # Событие на регистрацию udp клиента
-        self.on('REGISTER', self._handle_register)
+        self.on('REGISTER_UDP', self._handle_register_udp)
         # Событие на перемещение игрока
         self.on('POSITION', events.handle_position)
         # Принимаем udp запрос для иницииализации доступа к бродкасту

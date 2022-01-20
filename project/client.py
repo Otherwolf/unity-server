@@ -12,11 +12,11 @@ class Client:
 
     __repr__ = __str__
 
-    def __init__(self, addr: tuple, udp_port: Union[str, int], socket: socket):
-        self._socket = socket
+    def __init__(self, addr: tuple):
+        self._socket = None
         self.identifier = str(uuid.uuid4())
-        self.addr = addr
-        self.udp_addr = (addr[0], int(udp_port))
+        self.addr = None
+        self.udp_addr = addr
 
         self.props = {}
 

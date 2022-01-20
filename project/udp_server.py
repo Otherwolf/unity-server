@@ -83,15 +83,8 @@ class UdpServer(Thread):
             if not data_bytes:
                 continue
             try:
-                decoded_data = data_bytes.decode('utf-8')
-                data = json.loads(decoded_data)
-                identifier = data.get('identifier', '')
-                action = data.get('action')
-                client = self._get_client(identifier)
-                # handle data  here
-                event = self.main_server._actions.get(action)
-                if event:
-                    event(**data, server=self.main_server, client=client, addr=addr)
+                data = self._handle_bytes(data_bytes)
+                self._call_handler(data, addr)
             except KeyError as e:
                 print(e)
             except ValueError as e:
@@ -104,3 +97,16 @@ class UdpServer(Thread):
         for client in self.main_server.clients.values():
             if client.identifier == identifier:
                 return client
+
+    def _handle_bytes(self, data):
+        decoded_data = data.decode('utf-8')
+        return json.loads(decoded_data)
+
+    def _call_handler(self, data, addr):
+        identifier = data.get('identifier', '')
+        action = data.get('action')
+        client = self._get_client(identifier)
+        # handle data  here
+        event = self.main_server._actions.get(action)
+        if event:
+            event(**data, server=self.main_server, client=client, addr=addr)
