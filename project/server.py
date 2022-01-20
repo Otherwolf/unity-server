@@ -113,18 +113,18 @@ class Server:
         if client:
             client.init_tcp(client_socket.getpeername(), client_socket)
             self.send_to_client_tcp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
-            self._broadcast_init_client()
+        self._broadcast_init_client()
 
     def _handle_register_udp(self, *args, addr, socket, **kwargs):
         client = self.get_client_by_upd_address(addr)
         if not client:
             client = Client().init_udp(addr, socket)
             self.clients[client.identifier] = client
-            self.send_to_client_udp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
+        self.send_to_client_udp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
 
 
     def get_client_by_upd_address(self, addr: tuple[str, int]) -> Client:
-        for client in self.clients:
+        for client in self.clients.values():
             if client.udp_addr == addr:
                 return client
 
