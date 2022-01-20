@@ -102,25 +102,23 @@ class Server:
         self.set_udp_message('CLIENTS-LIST', message)
         self.send_to_all_udp()
 
-    def _handle_register(self, *args, **kwargs) -> None:
+    def _handle_register(self, addr, client_socket, **kwargs) -> None:
         """
         Запоминаем клиента
         :param addr:
         :param payload:
         :return: Client
         """
-        client_socket = kwargs.get('client_socket')
-        payload = kwargs.get('payload')
 
         for registered_client in self.clients.values():
             ip, udp_addr = registered_client.udp_addr
-            if str(udp_addr) == str(payload):
+            if str(udp_addr) == str(addr[1]):
                 if client_socket:
                     registered_client._socket = client_socket
                 self.send_to_client_tcp("REGISTER-SUCCESS", registered_client, {"identifier": registered_client.identifier})
                 self._handle_init_client()
                 return
-        client = Client(client_socket.getpeername(), int(payload), client_socket)
+        client = Client(client_socket.getpeername(), int(addr[1]), client_socket)
 
         self.clients[client.identifier] = client
         self.send_to_client_tcp("REGISTER-SUCCESS", client, {"identifier": client.identifier})

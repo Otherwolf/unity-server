@@ -91,7 +91,7 @@ class UdpServer(Thread):
                 # handle data  here
                 event = self.main_server._actions.get(action)
                 if event:
-                    event(**data, server=self.main_server, client=client)
+                    event(**data, server=self.main_server, client=client, addr=addr)
             except KeyError as e:
                 print(e)
             except ValueError as e:
