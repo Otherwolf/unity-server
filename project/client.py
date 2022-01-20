@@ -12,19 +12,31 @@ class Client:
 
     __repr__ = __str__
 
-    def __init__(self, addr: tuple):
+    def __init__(self):
         self._socket = None
+        self._udp_socket = None
         self.identifier = str(uuid.uuid4())
         self.addr = None
-        self.udp_addr = addr
+        self.udp_addr = None
 
         self.props = {}
+
+    def init_udp(self, udp_addr: tuple[str, int], udp_socket: socket):
+        self._udp_socket = udp_socket
+        self.identifier = str(uuid.uuid4())
+        self.udp_addr = udp_addr
+        return self
+
+    def init_tcp(self, tcp_addr: tuple[str, int], tcp_socket: socket):
+        self._socket = tcp_socket
+        self.identifier = str(uuid.uuid4())
+        self.addr = tcp_addr
+        return self
 
     def send_tcp(self, data: Union[str, dict]) -> None:
         message = json.dumps(dict(data))
         self._socket.send(str.encode(message))
 
     def send_udp(self, data: Union[str, dict]) -> None:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         message = json.dumps(dict(data))
-        sock.sendto(str.encode(message), self.udp_addr)
+        self._udp_socket.sendto(str.encode(message), self.udp_addr)

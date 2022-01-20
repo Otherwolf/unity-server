@@ -109,4 +109,4 @@ class UdpServer(Thread):
         # handle data  here
         event = self.main_server._actions.get(action)
         if event:
-            event(**data, server=self.main_server, client=client, addr=addr)
+            event(**data, server=self.main_server, client=client, addr=addr, socket=self.sock)
