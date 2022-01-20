@@ -110,17 +110,17 @@ class Server:
         :return: Client
         """
         client_socket = kwargs.get('client_socket')
-        real_ip, udp_port = kwargs.get('payload').split(':')
+        payload = kwargs.get('payload')
 
         for registered_client in self.clients.values():
             ip, udp_addr = registered_client.udp_addr
-            if str(udp_addr) == str(udp_port):
+            if str(udp_addr) == str(payload):
                 if client_socket:
                     registered_client._socket = client_socket
                 self.send_to_client_tcp("REGISTER-SUCCESS", registered_client, {"identifier": registered_client.identifier})
                 self._handle_init_client()
                 return
-        client = Client((real_ip, client_socket.getpeername()[1]), int(udp_port), client_socket)
+        client = Client(client_socket.getpeername(), int(payload), client_socket)
 
         self.clients[client.identifier] = client
         self.send_to_client_tcp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
