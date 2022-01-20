@@ -109,7 +109,7 @@ class Server:
         :param payload:
         :return: Client
         """
-        client = self.get_client_by_identifier(identifier)
+        client = self.clients.get(identifier)
         if client:
             client.init_tcp(client_socket.getpeername(), client_socket)
             self.send_to_client_tcp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
@@ -119,17 +119,13 @@ class Server:
         client = self.get_client_by_upd_address(addr)
         if not client:
             client = Client().init_udp(addr, socket)
-        self.send_to_client_udp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
+            self.clients[client.identifier] = client
+            self.send_to_client_udp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
 
 
     def get_client_by_upd_address(self, addr: tuple[str, int]) -> Client:
         for client in self.clients:
             if client.udp_addr == addr:
-                return client
-
-    def get_client_by_identifier(self, identifier: str) -> Client:
-        for client in self.clients:
-            if client.identifier == identifier:
                 return client
 
     def _init_events(self):
@@ -138,4 +134,4 @@ class Server:
         # Событие на перемещение игрока
         self.on('POSITION', events.handle_position)
         # Событие на регистрацию tcp клиента
-        self.on('REGISTER_TCP', self._handle_register_udp)
+        self.on('REGISTER_TCP', self._handle_register_tcp)
