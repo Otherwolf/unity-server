@@ -1,5 +1,5 @@
 from threading import Lock
-from typing import Union
+from typing import Union, Tuple
 
 from project.client import Client
 from project.tcp_server import TcpServer
@@ -14,7 +14,7 @@ class Event(list):
 
 
 class Server:
-    def __init__(self, tcp_port, udp_port):
+    def __init__(self, tcp_port: str, udp_port: str):
         self.tcp_port = tcp_port
         self.udp_port = udp_port
 
@@ -61,11 +61,13 @@ class Server:
         tcp_server.join()
 
     def send_to_all_tcp(self, action: str, message: Union[dict, str]) -> None:
+        # Отправляем сообщениие tcp всем клиентам
         data = dict(action=action, payload=message)
         for identifier, client in self.clients.items():
             client.send_tcp(data)
 
     def send_to_all_udp(self) -> None:
+        # Отправляем сообщениие udp всем клиентам
         for message in self._udp_messages:
             for identifier, client in self.clients.items():
                 client.send_udp(message)
@@ -80,6 +82,7 @@ class Server:
         client.send_udp(data)
 
     def set_udp_message(self, action: str, message: Union[dict, str]) -> None:
+        # добавляем в очередь новое udp сообщение
         self._udp_messages.append(dict(action=action, payload=message))
 
     def on(self, action: str, func) -> None:
@@ -94,7 +97,14 @@ class Server:
             self._actions[action] = Event()
         self._actions[action].append(func)
 
-    def _broadcast_init_client(self, *args, **kwargs):
+    def _broadcast_init_client(self, *args, **kwargs) -> None:
+        """
+            Сообщаем клиентам новый актуальный список клиентов.
+            Требуется поменять на событие о присоединении нового клиента
+        :param args:
+        :param kwargs:
+        :return:
+        """
         # broadcast
         message = {
             "client-list": list(self.clients.keys())
@@ -102,9 +112,9 @@ class Server:
         self.set_udp_message('CLIENTS-LIST', message)
         self.send_to_all_udp()
 
-    def _handle_register_tcp(self, identifier, client_socket, **kwargs) -> None:
+    def _handle_register_tcp(self, identifier: str, client_socket, **kwargs) -> None:
         """
-        Запоминаем клиента
+        Сохраняем сведения в CLient о tcp соединении  и рассылаем всем клиентам актуальный список клиентов
         :param addr:
         :param payload:
         :return: Client
@@ -112,9 +122,16 @@ class Server:
         client = self.clients.get(identifier)
         if client:
             client.init_tcp(client_socket.getpeername(), client_socket)
-            self._broadcast_init_client()
+        self._broadcast_init_client()
 
-    def _handle_register_udp(self, *args, addr, socket, **kwargs):
+    def _handle_register_udp(self, addr: Tuple[str, int], socket, **kwargs) -> None:
+        """
+        Сохраняем сведения в CLient о udp соединении и создаём клиента если его ещё не было
+        :param addr:
+        :param socket:
+        :param kwargs:
+        :return:
+        """
         client = self.get_client_by_upd_address(addr)
         if not client:
             client = Client().init_udp(addr, socket)
@@ -122,15 +139,28 @@ class Server:
         self.send_to_client_udp("REGISTER-SUCCESS", client, {"identifier": client.identifier})
 
 
-    def get_client_by_upd_address(self, addr: tuple[str, int]) -> Client:
+    def get_client_by_upd_address(self, addr: Tuple[str, int]) -> Client:
+        """
+        Получаем клиента по udp адресу
+        :param addr:
+        :return:
+        """
         for client in self.clients.values():
             if client.udp_addr == addr:
                 return client
 
-    def _init_events(self):
+    def _handle_client_left(self, *args, **kwargs):
+        pass
+
+    def _init_events(self) -> None:
+        """
+        Инициализируем события взаимодействия с клиентом
+        :return:
+        """
         # Событие на регистрацию udp клиента
         self.on('REGISTER_UDP', self._handle_register_udp)
-        # Событие на перемещение игрока
-        self.on('POSITION', events.handle_position)
         # Событие на регистрацию tcp клиента
         self.on('REGISTER_TCP', self._handle_register_tcp)
+        # Событие на перемещение игрока
+        self.on('POSITION', events.handle_position)
+        self.on('ON_LEFT_CLIENT', self._handle_client_left)

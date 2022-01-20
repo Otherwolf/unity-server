@@ -1,7 +1,9 @@
-from threading import Thread
 import socket
 import json
 
+from threading import Thread
+
+from project.utils import *
 
 class UdpServer(Thread):
     def __init__(self, udp_port, lock, main_server):
@@ -18,40 +20,6 @@ class UdpServer(Thread):
         # Принимаем сообщения
         self._handle_recv()
 
-
-            #     identifier = data.get("identifier")
-            #     payload = data.get("payload")
-            #     action = data.get("action")
-            #
-                # try:
-            #         self.lock.acquire()
-            #
-            #         if action == "update":
-            #             client = self.main_server.clients[identifier]
-            #
-            #             for action in payload:
-            #                 if action[0] == "move":
-            #                     client.props["x"] = (
-            #                         client.props.get("x", 0) + action[1][0]
-            #                     )
-            #                     client.props["y"] = (
-            #                         client.props.get("y", 0) + action[1][0]
-            #                     )
-            #             self.main_server.udp_messages.append(
-            #                 {"identifier": identifier, "message": payload}
-            #             )
-            #
-            #         self.send_messages()
-            #     finally:
-            #         self.lock.release()
-            # except KeyError:
-            #     print('KeyError')
-            #     # print(f"JSON from {addr}:{addr} is not valid")
-            # except ValueError:
-            #     print('ValueError')
-            #     # print(f"Message from {addr}:{addr} is not valid json string")
-
-        # self.stop()
 
     def stop(self):
         self.sock.close()
@@ -83,7 +51,7 @@ class UdpServer(Thread):
             if not data_bytes:
                 continue
             try:
-                data = self._handle_bytes(data_bytes)
+                data = bytes_to_dict(data_bytes)
                 self._call_handler(data, addr)
             except KeyError as e:
                 print(e)
@@ -93,19 +61,9 @@ class UdpServer(Thread):
                 pass
         self.stop()
 
-    def _get_client(self, identifier: str):
-        for client in self.main_server.clients.values():
-            if client.identifier == identifier:
-                return client
-
-    def _handle_bytes(self, data):
-        decoded_data = data.decode('utf-8')
-        return json.loads(decoded_data)
-
     def _call_handler(self, data, addr):
-        identifier = data.get('identifier', '')
         action = data.get('action')
-        client = self._get_client(identifier)
+        client = self.main_server.clients.get(data.get('identifier', ''))
         # handle data  here
         event = self.main_server._actions.get(action)
         if event:

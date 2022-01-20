@@ -5,6 +5,8 @@ from threading import Thread
 from typing import Union
 from select import select
 
+from project.utils import *
+
 
 class TcpServer(Thread):
     def __init__(self, tcp_port, lock, main_server):
@@ -101,8 +103,7 @@ class TcpServer(Thread):
             if data_bytes == b'close':
                 break
             try:
-                decoded_data = data_bytes.decode('utf-8')
-                data = json.loads(decoded_data)
+                data = bytes_to_dict(data_bytes)
                 print(data)
 
                 action = data.get('action')

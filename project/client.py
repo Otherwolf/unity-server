@@ -2,13 +2,13 @@ import uuid
 import json
 import socket
 
-from typing import Union
+from typing import Union, Tuple
 
 
 class Client:
 
     def __str__(self):
-        return f'Client: {self.addr}'
+        return f'Client: {self.identifier} /{self.udp_addr}'
 
     __repr__ = __str__
 
@@ -21,13 +21,13 @@ class Client:
 
         self.props = {}
 
-    def init_udp(self, udp_addr: tuple[str, int], udp_socket: socket):
+    def init_udp(self, udp_addr: Tuple[str, int], udp_socket: socket):
         self._udp_socket = udp_socket
         self.identifier = str(uuid.uuid4())
         self.udp_addr = udp_addr
         return self
 
-    def init_tcp(self, tcp_addr: tuple[str, int], tcp_socket: socket):
+    def init_tcp(self, tcp_addr: Tuple[str, int], tcp_socket: socket):
         self._socket = tcp_socket
         self.identifier = str(uuid.uuid4())
         self.addr = tcp_addr
