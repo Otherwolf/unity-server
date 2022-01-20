@@ -139,5 +139,5 @@ class Server:
         self.on('REGISTER_UDP', self._handle_register_udp)
         # Событие на перемещение игрока
         self.on('POSITION', events.handle_position)
-        # Принимаем udp запрос для иницииализации доступа к бродкасту
-        # self.on('INIT_CLIENT', self._handle_init_client)
+        # Событие на регистрацию tcp клиента
+        self.on('REGISTER_TCP', self._handle_register_udp)
