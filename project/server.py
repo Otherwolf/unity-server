@@ -100,7 +100,7 @@ class Server:
     def _broadcast_init_client(self, *args, **kwargs) -> None:
         """
             Сообщаем клиентам новый актуальный список клиентов.
-            Требуется поменять на событие о присоединении нового клиента
+            Требуется поменять на событие о присоединении нового клиента или дисконнект
         :param args:
         :param kwargs:
         :return:
@@ -149,8 +149,16 @@ class Server:
             if client.udp_addr == addr:
                 return client
 
-    def _handle_client_left(self, *args, **kwargs):
-        pass
+    def _handle_client_left(self, *args, identifier, **kwargs):
+        """
+       Дисконнект клиента. Закрываем всё и рассылаем инфу клиентам
+       :param addr:
+       :return:
+       """
+        if identifier:
+            self.clients.get(identifier).close()
+            del self.clients[identifier]
+            self._broadcast_init_client()
 
     def _init_events(self) -> None:
         """
@@ -163,4 +171,5 @@ class Server:
         self.on('REGISTER_TCP', self._handle_register_tcp)
         # Событие на перемещение игрока
         self.on('POSITION', events.handle_position)
+        # СОбытие на дисконнект клиента
         self.on('ON_LEFT_CLIENT', self._handle_client_left)

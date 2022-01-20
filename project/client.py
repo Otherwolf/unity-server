@@ -40,3 +40,6 @@ class Client:
     def send_udp(self, data: Union[str, dict]) -> None:
         message = json.dumps(dict(data))
         self._udp_socket.sendto(str.encode(message), self.udp_addr)
+
+    def close(self) -> None:
+        self._socket.close()
