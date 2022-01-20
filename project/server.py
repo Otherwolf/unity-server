@@ -158,7 +158,8 @@ class Server:
         if identifier:
             self.clients.get(identifier).close()
             del self.clients[identifier]
-            self._broadcast_init_client()
+            self.set_udp_message('ON_LEFT_CLIENT', identifier)
+            self.send_to_all_udp()
 
     def _init_events(self) -> None:
         """
