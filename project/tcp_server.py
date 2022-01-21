@@ -98,6 +98,8 @@ class TcpServer(Thread):
                 data_bytes = client_socket.recv(1024)
             except BlockingIOError:
                 return
+            except OSError:
+                break
             if not data_bytes:
                 return
             if data_bytes == b'close':
