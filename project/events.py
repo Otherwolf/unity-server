@@ -1,9 +1,9 @@
 import json
 
+from project.protocol import Packet
 
-def handle_position(server, payload: str, client, **kwargs) -> None:
-    data = json.loads(payload)
-    if client and payload:
-        data['identifier'] = client.identifier
-        server.set_udp_message('POSITION', data)
+
+def handle_position(server, data: Packet, client, **kwargs) -> None:
+    if client and data:
+        server.set_udp_message(data)
         server.send_to_all_udp()
