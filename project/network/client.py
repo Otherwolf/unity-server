@@ -1,9 +1,8 @@
 import uuid
-import json
 
-from typing import Tuple, Union
+from typing import Tuple
 
-from project.protocol import TCPServer, Packet
+from project.network.protocol import TCPServer, Packet
 
 class Client:
 

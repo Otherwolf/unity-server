@@ -4,7 +4,9 @@ from twisted.internet import protocol
 from twisted.internet.protocol import ServerFactory as sf, IAddress, connectionDone, failure
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import threads
-from typing import Optional, Dict, Union
+from typing import Optional, Union
+
+from project.network import consts
 
 
 class Packet(pydantic.BaseModel):
@@ -14,7 +16,8 @@ class Packet(pydantic.BaseModel):
 
 
 class TCPServer(protocol.Protocol):
-    main_server = None
+    handle_request_callback = None
+    handle_system_callback = None
 
     def connectionMade(self) -> None:
         ip = self.transport.getPeer().host
@@ -26,13 +29,13 @@ class TCPServer(protocol.Protocol):
         except pydantic.error_wrappers.ValidationError:
             print('received not valid tcp-data: ', data)
             return
-        self.main_server.handle_incoming_package(data, self)
+        self.handle_request_callback(data, self)
         # self.transport.loseConnection()
 
     def connectionLost(self, reason: failure.Failure = connectionDone):
         print('Connection lost with client')
         print(reason)
-        self.main_server.handle_lost_connection(self)
+        self.handle_system_callback(consts.ServerSystemActions.USER_DISCONNECT, self)
 
 
 class TCPFactory(sf):
@@ -42,7 +45,7 @@ class TCPFactory(sf):
 
 
 class UDPServer(DatagramProtocol):
-    main_server = None
+    handle_request_callback = None
 
     def startProtocol(self):
         """
@@ -66,4 +69,4 @@ class UDPServer(DatagramProtocol):
         except pydantic.error_wrappers.ValidationError:
             print('received not valid udp-data: ', datagram)
             return
-        threads.deferToThread(self.main_server.handle_incoming_package, data, self, address)
+        threads.deferToThread(self.handle_request_callback, data, self, address)

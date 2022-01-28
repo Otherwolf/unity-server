@@ -1,6 +1,6 @@
 import argparse
 
-from project.server import Server
+from project.fps_extension import FPSExtension
 
 parser = argparse.ArgumentParser()
 
@@ -14,5 +14,5 @@ parser.add_argument(
 args = parser.parse_args()
 
 if __name__ == "__main__":
-    server = Server(args.tcp_port, args.udp_port)
-    server.start()
+    game = FPSExtension(args.tcp_port, args.udp_port)
+    game.run_server()
