@@ -1,14 +1,13 @@
 import json
-import time
 
 from typing import Optional
 
 from project.network.server import Server, Packet
-from project.simulation.world import World
+from project.simulation import world, player, transform
 from project.network import consts
 from project.network.client import Client
-from project.simulation import player, transform
 from project.network.protocol import UDPServer
+from project import utils
 
 
 class FPSExtension:
@@ -26,20 +25,15 @@ class FPSExtension:
         return self.world
 
     def init(self):
-        self.world = World(self)  # Creating the world model
+        self.world = world.World(self)  # Creating the world model
 
         # Subscribing the request handlers
-        # addRequestHandler("sendAnim", SendAnimHandler.class );
         self.server.add_request_handler("CONNECTED", self.spawn_me_handler)
         self.server.add_request_handler("sendTransform", self.send_transform_handler)
-        # addRequestHandler("getTime", GetTimeHandler.class );
-        # addRequestHandler("shot", ShotHandler.class );
-        # addRequestHandler("reload", ReloadHandler.class );
-        #
+        self.server.add_request_handler("getTime", self.get_time_handler)
+        # Subscribing the system handlers
         self.server.add_event_handler(consts.ServerSystemActions.USER_DISCONNECT, self.on_user_gone_handler)
         self.server.add_event_handler(consts.ServerSystemActions.USER_LOGOUT, self.on_user_gone_handler)
-
-        print("FPS extension initialized")
 
     def destroy(self):
         self.world = None
@@ -84,6 +78,10 @@ class FPSExtension:
             self.server.send_to(packet, protocol=UDPServer)
 
     def send_transform(self, client, transform):
-        transform.time_stamp = int(time.time() * 1000.0)
+        transform.time_stamp = utils.get_time_now_in_ms()
         packet = Packet(action="transform", identifier=client.identifier, payload=transform.to_packet())
         self.server.send_to_all(packet, UDPServer)
+
+    def get_time_handler(self, client, **kwargs):
+        packet = Packet(action="time", identifier=client.identifier, payload=utils.get_time_now_in_ms())
+        self.server.send_to(packet, UDPServer)
