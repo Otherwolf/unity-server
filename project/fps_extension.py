@@ -80,8 +80,8 @@ class FPSExtension:
     def send_transform(self, client, transform):
         transform.time_stamp = utils.get_time_now_in_ms()
         packet = Packet(action="transform", identifier=client.identifier, payload=transform.to_packet())
-        self.server.send_to_all(packet, UDPServer)
+        self.server.send_to_all(packet, protocol=UDPServer)
 
     def get_time_handler(self, client, **kwargs):
         packet = Packet(action="time", identifier=client.identifier, payload=utils.get_time_now_in_ms())
-        self.server.send_to(packet, UDPServer)
+        self.server.send_to(packet, protocol=UDPServer)
