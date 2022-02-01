@@ -67,7 +67,7 @@ class Server:
         """
         event = self._system_actions.get(action)
         if event:
-            event(action=action, client=self.get_client_by_tcp_socket(connection))
+            event(client=self.get_client_by_tcp_socket(connection))
 
     def get_client_by_tcp_socket(self, connection: TCPServer) -> Optional[Client]:
         for client in self.users.values():
@@ -119,8 +119,8 @@ class Server:
         self._system_actions[action].append(func)
 
     def handle_lost_connection(self, client: Client, **kwargs):
-        del self.users[client.identifier]
         if client:
+            del self.users[client.identifier]
             client.close()
 
     def _handle_register(self, data: Packet, client_socket: Union[TCPServer, UDPServer], address, **kwargs) -> None:
