@@ -32,6 +32,7 @@ class FPSExtension:
         self.server.add_request_handler("sendTransform", self.send_transform_handler)
         self.server.add_request_handler("getTime", self.get_time_handler)
         self.server.add_request_handler("sendAnim", self.send_anim_handler)
+        self.server.add_request_handler("ON_LEFT_CLIENT", self.on_user_gone_handler)
         # Subscribing the system handlers
         self.server.add_event_handler(consts.ServerSystemActions.USER_DISCONNECT, self.on_user_gone_handler)
         self.server.add_event_handler(consts.ServerSystemActions.USER_LOGOUT, self.on_user_gone_handler)

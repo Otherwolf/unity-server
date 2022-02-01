@@ -35,3 +35,6 @@ class Client:
     def send_udp(self, data: Packet) -> None:
         message = data.json()
         self._udp_socket.transport.write(str.encode(message), self.udp_addr)
+
+    def close(self) -> None:
+        self._socket.transport.loseConnection()

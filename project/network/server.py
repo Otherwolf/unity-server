@@ -120,6 +120,8 @@ class Server:
 
     def handle_lost_connection(self, client: Client, **kwargs):
         del self.users[client.identifier]
+        if client:
+            client.close()
 
     def _handle_register(self, data: Packet, client_socket: Union[TCPServer, UDPServer], address, **kwargs) -> None:
         """
@@ -146,6 +148,7 @@ class Server:
         """
         # Событие на регистрацию клиента
         self.add_request_handler('REGISTER', self._handle_register)
+        self.add_request_handler('ON_LEFT_CLIENT', self.handle_lost_connection)
         # Событие на потерю соединения
         self.add_event_handler(consts.ServerSystemActions.USER_DISCONNECT, self.handle_lost_connection)
         self.add_event_handler(consts.ServerSystemActions.USER_LOGOUT, self.handle_lost_connection)
